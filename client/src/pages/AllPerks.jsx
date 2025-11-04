@@ -21,31 +21,37 @@ export default function AllPerks() {
   
   const [error, setError] = useState('')
 
-  // ==================== SIDE EFFECTS WITH useEffect HOOK ====================
+  // ==================== EFFECTS ====================
 
- /*
- TODO: HOOKS TO IMPLEMENT
- * useEffect Hook #1: Initial Data Loading
- * useEffect Hook #2: Auto-search on Input Change
+  // useEffect Hook #1: Initial Load 
+  useEffect(() => {
+    loadAllPerks()
+  }, []) // Empty dependency array = run only once on mount
 
-*/
+  // useEffect Hook #2: Auto-search on Input Change
+  useEffect(() => {
+    // Debounce search to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      loadAllPerks()
+    }, 500) // Wait 500ms after user stops typing
+
+    // Cleanup function - clears timeout if component unmounts or dependencies change
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, merchantFilter]) // Re-run when search or filter changes
 
   
   useEffect(() => {
-    // Extract all merchant names from perks array
-    const merchants = perks
-      .map(perk => perk.merchant) // Get merchant from each perk
-      .filter(merchant => merchant && merchant.trim()) // Remove empty/null values
-    
-    // Create array of unique merchants using Set
-    // Set automatically removes duplicates, then we convert back to array
-    const unique = [...new Set(merchants)]
-    
-    // Update state with unique merchants
-    setUniqueMerchants(unique)
-    
-    // This effect depends on [perks], so it re-runs whenever perks changes
-  }, [perks]) // Dependency: re-run when perks array changes
+  // Extract merchant objects (populated from backend)
+  const merchants = perks
+    .map(perk => perk.createdBy) // merchant is a string, createdBy is the user object
+    .filter(merchant => merchant && merchant._id) // only valid objects
+
+  // Remove duplicates by merchant._id
+  const unique = Array.from(new Map(merchants.map(m => [m._id, m])).values())
+
+  setUniqueMerchants(unique)
+}, [perks])
+
 
   
   async function loadAllPerks() {
@@ -125,7 +131,7 @@ export default function AllPerks() {
         <form onSubmit={handleSearch} className="space-y-4">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+          
             
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-2">
@@ -136,7 +142,8 @@ export default function AllPerks() {
                 type="text"
                 className="input"
                 placeholder="Enter perk name..."
-                
+                value={searchQuery} // binds the input to the searchQuery state
+                onChange={(e) => setSearchQuery(e.target.value)} // updates state as user types
               />
               <p className="text-xs text-zinc-500 mt-1">
                 Auto-searches as you type, or press Enter / click Search
@@ -151,16 +158,17 @@ export default function AllPerks() {
               </label>
               <select
                 className="input"
-                
+                value={merchantFilter}
+                onChange={(e) => setMerchantFilter(e.target.value)}
               >
                 <option value="">All Merchants</option>
-                
                 {uniqueMerchants.map(merchant => (
-                  <option key={merchant} value={merchant}>
-                    {merchant}
+                  <option key={merchant._id} value={merchant._id}>
+                    {merchant.name || merchant.email}
                   </option>
                 ))}
               </select>
+
             </div>
           </div>
 
@@ -289,4 +297,3 @@ export default function AllPerks() {
     </div>
   )
 }
-
