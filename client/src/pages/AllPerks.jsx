@@ -41,13 +41,13 @@ export default function AllPerks() {
 
   
   useEffect(() => {
-  // Extract merchant objects (populated from backend)
+  // Extract unique merchant names from perks
   const merchants = perks
-    .map(perk => perk.createdBy) // merchant is a string, createdBy is the user object
-    .filter(merchant => merchant && merchant._id) // only valid objects
+    .map(perk => perk.merchant)
+    .filter(merchant => merchant && merchant.trim()) // only valid non-empty strings
 
-  // Remove duplicates by merchant._id
-  const unique = Array.from(new Map(merchants.map(m => [m._id, m])).values())
+  // Remove duplicates
+  const unique = [...new Set(merchants)]
 
   setUniqueMerchants(unique)
 }, [perks])
@@ -163,8 +163,8 @@ export default function AllPerks() {
               >
                 <option value="">All Merchants</option>
                 {uniqueMerchants.map(merchant => (
-                  <option key={merchant._id} value={merchant._id}>
-                    {merchant.name || merchant.email}
+                  <option key={merchant} value={merchant}>
+                    {merchant}
                   </option>
                 ))}
               </select>

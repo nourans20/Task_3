@@ -1,0 +1,2 @@
+- [x] Update useEffect in AllPerks.jsx to extract unique merchants from perk.merchant field
+- [x] Update dropdown options to use merchant string as value and display text
